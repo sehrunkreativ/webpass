@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Little Password Generator</title>
+  <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/css/Registration-Form-with-Photo.css">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="register-photo">
+      <div class="form-container">
+        <div class="image-holder" style="background-image:url(&quot;assets/img/james-sutton-187816-klein.jpg&quot;);"></div>
+        <form method="post">
+          <h2 class="text-center">Create your Password</h2>
+          <div class="form-group">
+            <input class="form-control" type="email" name="email" id="email" placeholder="your email">
+          </div>
+          <div class="form-group">
+            <input class="form-control" type="password" name="password" id="password" placeholder="your master password">
+          </div>
+          <div class="form-group">
+            <input class="form-control" type="text" name="service" id="service" placeholder="service">
+          </div>
+          <div class="form-group">
+            <div class="checkbox">
+              <label class="control-label">
+                <input type="checkbox" id="up" checked>Upper-case (A, B, C, ...)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="checkbox">
+              <label class="control-label">
+                <input type="checkbox" id="lc" checked>Lower-case (a, b, c, ...)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="checkbox">
+              <label class="control-label">
+                <input type="checkbox" id="di" checked>Digits (1, 2, 3, ...)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="checkbox">
+              <label class="control-label">
+                <input type="checkbox" id="sp" checked>Special (!, _, -, $, ...)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <button class="btn btn-primary btn-block" type="button" onclick="javascript:generatePassword()">Generate Password</button>
+          </div>
+          <a href="#" class="already">Your Password is</a>
+          <p class="text-center" style="font-family:Courier New, Courier, Lucida Sans Typewriter, Lucida Typewriter, monospace;font-size:24px;font-style:normal;font-variant:normal;font-weight:500;line-height:26.4px;" id="result"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+  <script src="assets/js/sha512.js"></script>
+  <script>
+    // Convert a hex string to a byte array
+    function myhexToBytes(hex) {
+      for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substr(c, 2), 16));
+      return bytes;
+    }
+
+    // Convert a byte array to a hex string
+    function mybytesToHex(bytes) {
+      for (var hex = [], i = 0; i < bytes.length; i++) {
+        hex.push((bytes[i] >>> 4).toString(16));
+        hex.push((bytes[i] & 0xF).toString(16));
+      }
+      return hex.join("");
+    }
+
+    function generatePassword() {
+      
+      // Create new SHA-512 Object
+      var shaObj = new jsSHA("SHA-512", "TEXT")
+      shaObj.setHMACKey($('#password').val(), "TEXT")
+      shaObj.update($('#email').val())
+      shaObj.update($('#service').val())
+      
+      // generate a hex string and convert it to bytes
+      var hmac = shaObj.getHMAC("HEX")      
+      var bytes = myhexToBytes(hmac)
+
+      // Generate the alphabet
+      var alphabet = ""
+      if (document.getElementById('up').checked) {
+        alphabet += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      }
+      if (document.getElementById('lc').checked) {
+        alphabet += "abcdefghijklmnopqrstuvwxyz"
+      }
+      if (document.getElementById('di').checked) {
+        alphabet += "0123456789"
+      }
+      if (document.getElementById('sp').checked) {
+        alphabet += "!§$%&/()=?#*+-_.,;:"
+      }
+
+      // Calculate result set based on bitmask
+      var resultstring = ""
+      var mask = (2 << Math.log(alphabet.length - 1) / Math.LN2) - 1
+      for (var i = 0; i < 64; i++) {
+        var byte = bytes[i] & mask
+        if (alphabet[byte]) {
+          resultstring += alphabet[byte]
+        }
+      }
+      // In first version, limit to 20 characters
+      $('#result').html(resultstring.substr(0,20))
+    }
+  </script>
+
+</body>
+
+</html>
